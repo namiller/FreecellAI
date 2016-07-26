@@ -7,17 +7,17 @@ string private_getString(const Card& c) {
   if (c.getVal() == -1) {
     return "XXX";
   }
-  if (c.getVal() == -3) {
-    return "XhX";
-  }
   if (c.getVal() == -4) {
     return "XsX";
   }
   if (c.getVal() == -5) {
-    return "XdX";
+    return "XhX";
   }
   if (c.getVal() == -6) {
     return "XcX";
+  }
+  if (c.getVal() == -7) {
+    return "XdX";
   }
   string ret = " ";
   int i = c.getNum();

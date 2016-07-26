@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <deque>
+#include <sstream>
 #include <cstdlib>
 #include "Card.h"
 #include "Move.h"
@@ -105,7 +106,7 @@ vector<Move> GameState::getMoves() const {
       ret.push_back(Move(card, src, dst));
     }
   }
-  
+
   return ret;
 }
 
@@ -113,3 +114,43 @@ GameState GameState::apply(const Move &m) const {
   return *this;
 }
 
+string private_getString(const GameState& s) {
+  stringstream ss;
+  ss << s.hash() << endl;
+  ss << "|";
+  for (int i = 0; i < 4; i++) {
+    if (i < s.getBuffer().size()) {
+      ss << s.getBuffer()[i] << "|";
+    } else {
+      ss << "   |";
+    }
+  }
+  ss << "   |";
+  for (int i = 0; i < 4; i++) {
+    ss << s.getDump()[i] << "|";
+  }
+  ss << endl;
+  for (const auto& card : s.getBuffer()) {
+    ss << card << "|";
+  }
+  int max_depth = 0;
+  for (const auto& stack : s.getStacks()) {
+    max_depth = max(max_depth, (int)stack.size());
+  }
+  for (int i = 0; i < max_depth; i++) {
+    for (const auto& stack : s.getStacks()) {
+      if (stack.size() > i) {
+        ss << " " << stack[i] << " ";
+      } else {
+        ss << "     ";
+      }
+    }
+    ss << endl;
+  }
+  return ss.str();
+}
+
+
+ostream& operator <<(ostream& stream, const GameState &rhs) {
+  return stream << private_getString(rhs);
+}

@@ -1,7 +1,6 @@
 #ifndef CARD_H
 #define CARD_H
 #include <vector>
-#include "ASCIIviz.h"
 
 class Card {
   private:

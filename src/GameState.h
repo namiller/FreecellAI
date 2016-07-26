@@ -20,6 +20,7 @@ class GameState {
     int getMoveCapacity() const {return 5 - buffer.size();}
     std::vector<Move> getMoves() const;
     GameState apply(const Move &m) const;
+    friend std::ostream& operator<<(std::ostream &stream, const GameState& rhs);
 };
 
 #endif // GAMESTATE_H
