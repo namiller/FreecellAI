@@ -6,8 +6,65 @@
 #include <cstdlib>
 #include "Card.h"
 #include "Move.h"
+#include <string>
 
 using namespace std;
+
+vector<Card> v_parse(string s) {
+  istringstream ss(s);
+  string n;
+  vector<Card> ret;
+  while(getline(ss, n, ',')) {
+    ret.push_back(Card(stoi(n)));
+  }
+  return ret;
+}
+
+GameState::GameState(string serial) {
+  istringstream ss(serial);
+  string vect;
+  getline(ss, vect, ';');
+  buffer = v_parse(vect);
+  for (int i = 0; i < 4; i++) {
+    getline(ss, vect, ';');
+    dump[i] = v_parse(vect)[0];
+  }
+  for (int i = 0; i < 7; i++) {
+    getline(ss, vect, ';');
+    stacks[i] = v_parse(vect);
+  }
+}
+
+string v_serialize(vector<Card> vc) {
+  stringstream ss;
+  for (int i = 0; i < vc.size(); i++) {
+    ss << vc[i].getVal();
+    if (i != vc.size() - 1)
+      ss << ",";
+  }
+  ss << ";";
+  return ss.str();
+}
+
+string GameState::serialize() const {
+  stringstream ss;
+  ss << v_serialize(buffer);
+  for (int i = 0; i < 4; i++) {
+    vector<Card> v;
+    v.push_back(dump[i]);
+    ss << v_serialize(v);
+  }
+  for (int i = 0; i < 7; i++) {
+    ss << v_serialize(stacks[i]);
+  }
+  return ss.str();
+}
+
+GameState::GameState(const GameState& cpy) {
+  this->stacks = cpy.stacks;
+  this->buffer = cpy.buffer;
+  this->dump = cpy.dump;
+}
 
 GameState::GameState(int seed) {
   srand(seed);
@@ -56,6 +113,17 @@ unsigned long GameState::hash() const {
   return seed;
 }
 
+bool GameState::isSolved() const {
+  for (const auto stack : stacks) {
+    for (int i = 1; i < stack.size(); i++) {
+      if (stack[i].getNum() > stack[i-1].getNum()) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
 vector<Move> GameState::getMoves() const {
   vector<Move> ret;
   // buffer to ...
@@ -80,6 +148,9 @@ vector<Move> GameState::getMoves() const {
   src = 8;
   // stack to ...
   for (src = 8; src < 15; src++) {
+    if (stacks[src - 8].empty()) {
+      continue;
+    }
     // stack
     for (int dst = 8; dst < 15; dst++) {
       if (dst == src) continue;
@@ -111,7 +182,31 @@ vector<Move> GameState::getMoves() const {
 }
 
 GameState GameState::apply(const Move &m) const {
-  return *this;
+  GameState nState = *this; //copy.
+  vector<Card> moving;
+  // Source.
+  if (m.src < 4) {
+    moving.push_back(nState.buffer[m.src]);
+    nState.buffer.erase(nState.buffer.begin() + m.src);
+  } else if (m.src < 8) {
+    // Illegal move.
+  } else {
+    do {
+      moving.push_back(nState.stacks[m.src - 8].back());
+      nState.stacks[m.src - 8].pop_back();
+    } while (m.mover != moving.back());
+  }
+  // Destination.
+  if (m.dest < 4) {
+    nState.buffer.push_back(moving[0]);
+  } else if (m.dest < 8) {
+    nState.dump[m.dest - 4] = moving[0];
+  } else {
+    for (int i = 0; i < moving.size(); i++) {
+      nState.stacks[m.dest - 8].push_back(moving[moving.size() - 1 - i]);
+    }
+  }
+  return nState;
 }
 
 string private_getString(const GameState& s) {
@@ -130,9 +225,6 @@ string private_getString(const GameState& s) {
     ss << s.getDump()[i] << "|";
   }
   ss << endl;
-  for (const auto& card : s.getBuffer()) {
-    ss << card << "|";
-  }
   int max_depth = 0;
   for (const auto& stack : s.getStacks()) {
     max_depth = max(max_depth, (int)stack.size());

@@ -26,6 +26,12 @@ class Card {
       }
       return (top.getSuit() == getSuit()) && (top.getNum() == (getNum() - 1));
     }
+    bool operator==(const Card &rhs) const {
+      return rhs.getVal() == getVal();
+    }
+    bool operator!=(const Card &rhs) const {
+      return !(rhs == *this);
+    }
     friend std::ostream& operator<<(std::ostream &stream, const Card& rhs);
 };
 

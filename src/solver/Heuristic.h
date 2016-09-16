@@ -4,7 +4,8 @@
 #include "GameState.h"
 
 class Heuristic {
-  virtual double evaluate(const GameState& gs);
+  public:
+    virtual double evaluate(const GameState& gs) const = 0;
 };
 
 #endif // HEURISTIC_H
